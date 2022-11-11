@@ -1,0 +1,13 @@
+- name: get banner from netcfg-generator
+  command: curl --user {{ git_uname }}:{{ git_token }} 'https://raw.git.XXXX.com/NetworkInfrastructure/netcfg-generator/master/templates/banner.j2' -o 'group_files/banner.cfg'
+  environment:
+    - HTTP_PROXY: http://{{ proxy_username }}:{{ proxy_password | urlencode }}@web.prod.proxy.XXX.com:4200
+    - HTTPS_PROXY: http://{{ proxy_username }}:{{ proxy_password | urlencode }}@web.prod.proxy.XXX.com:4200
+  run_once: true
+  delegate_to: localhost
+
+- name: Configure banner on devices
+  ios_banner:
+    banner:  motd
+    text: "{{ lookup('file', 'group_files/banner.cfg') }}"
+    state: present

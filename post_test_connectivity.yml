@@ -1,0 +1,28 @@
+- name: Remove existing post_auth_fail.txt
+  file:
+    path: ./post_auth_fail.txt
+    state: absent
+  delegate_to: localhost
+  run_once: true
+
+- name: Check auth status after pushing AAA commands
+  ignore_errors: true
+  ios_command:
+    commands: sh run | i username
+  register: postoutput
+
+- name: List devices which have auth issue
+  lineinfile:
+    dest: ./post_auth_fail.txt
+    line: "{{ inventory_hostname }}"
+    regexp: "{{ inventory_hostname }}"
+    create: true
+  when: postoutput.failed
+  delegate_to: localhost
+
+- name: Delete ansible user
+  ios_user:
+    aggregate:
+      - name: harshops
+    state: absent
+  when: "'harshops' in postoutput.stdout[0]"

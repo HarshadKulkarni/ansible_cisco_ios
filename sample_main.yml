@@ -1,0 +1,19 @@
+- name: Execute and parse the command output
+  connection: network_cli
+  gather_facts: false
+  ignore_errors: true
+  hosts: all
+  ignore_unreachable: true
+  vars:
+    csv_tmp:
+
+  tasks:
+    - name: auth.yml
+      ansible.builtin.import_tasks: dev_auth.yml
+    - name: directory.yml
+      ansible.builtin.import_tasks: directory.yml
+    - name: parser.yml
+      ansible.builtin.import_tasks: parser.yml
+    - name: proxy_report.yml
+      ansible.builtin.import_tasks: proxy_report.yml
+      

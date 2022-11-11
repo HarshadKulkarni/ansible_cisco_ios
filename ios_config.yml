@@ -1,0 +1,39 @@
+- name: load SNMP ACL's
+  ios_config:
+    src: group_files/snmp_acl.j2
+
+- name: Configure logging,snmp_host & domain on devices for NA region
+  ios_config:
+    src: group_files/NA.j2
+  when: '"gw.XXXX.com" in inventory_hostname'
+
+- name: Configure logging,snmp_host & domain on devices for LA region
+  ios_config:
+    src: group_files/LA.j2
+  when: '"gw.la.XXXX.com" in inventory_hostname'
+
+- name: configure snmp-server enable traps eigrp
+  ios_config:
+    lines: snmp-server enable traps eigrp
+  when: "'eigrp' in router.stdout[0]"
+
+- name: configure snmp-server enable traps ospf
+  ios_config:
+    lines: snmp-server enable traps ospf
+  when: "'ospf' in router.stdout[0]"
+
+- name: Configure aaa on devices
+  ios_config:
+    src: group_files/aaa.j2
+
+- name: check existing aaa has vrf_forward commands
+  ios_command:
+    commands: sh run aaa group server tacacs+ | i forwarding
+  register: vrf_forward_command
+
+- name: Configure vrf_forward commands for vrf devices
+  ios_config:
+    lines: "{{ vrf_forward_command.stdout[0] }}"
+    parents: aaa group server tacacs+ GL-TACACS-SERVERS
+  when: "'forwarding' in vrf_forward_command.stdout[0]"
+

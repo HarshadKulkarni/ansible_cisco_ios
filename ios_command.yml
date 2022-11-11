@@ -1,0 +1,34 @@
+- name: Configure logging,snmp_host & domain on devices for NA region
+  ios_config:
+    src: group_files/NA.j2
+  when: '"gw.XXXX.com" in inventory_hostname'
+
+- name: Configure logging,snmp_host & domain on devices for LA region
+  ios_config:
+    src: group_files/LA.j2
+  when: '"gw.la.XXXX.com" in inventory_hostname'
+
+- name: Configure logging,snmp_host & domain on devices for EMEA region
+  ios_config:
+    src: group_files/EMEA.j2
+  when: '"gw.eu.XXXX.com" in inventory_hostname'
+
+- name: Configure logging,snmp_host & domain on devices for APAC region
+  ios_config:
+    src: group_files/APAC.j2
+  when: '"gw.sg.XXXX.com" in inventory_hostname'
+
+- name: check which routing protocol is running
+  ios_command:
+    commands: sh run | i router
+  register: router
+
+- name: configure snmp-server enable traps eigrp
+  ios_config:
+    lines: snmp-server enable traps eigrp
+  when: "'eigrp' in router.stdout[0]"
+
+- name: configure snmp-server enable traps ospf
+  ios_config:
+    lines: snmp-server enable traps ospf
+  when: "'ospf' in router.stdout[0]"

@@ -1,0 +1,51 @@
+- name: Get Token to login into Hashicorp Vault
+  uri:
+    url: "https://iam-vault.tgrc.XXXX.com/v1/auth/approle/login"
+    method: POST
+    follow_redirects: all 
+    body_format: json  
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    body: { "role_id": "{{role_id}}","secret_id": "{{secret_id}}" }
+    use_proxy: no
+    validate_certs:  no
+    timeout: 30
+  register: login_data
+  run_once: true
+  delegate_to: localhost
+
+- name: Get updated snmpv3 method login password 
+  uri:
+    url: "https://iam-vault.tgrc.XXXX.com/v1/GlobalIT/data/network%2Fharshops%2Fprod%2Fsnmp"
+    method: GET
+    follow_redirects: all 
+    body_format: json
+    use_proxy: no
+    validate_certs:  no
+    headers:
+      Content-Type: application/json
+      X-Vault-Token: "{{ login_data['json']['auth']['client_token'] }}"
+      Accept: "application/json"
+    status_code: [200, 201]
+  register: updated_cred
+  run_once: true
+  delegate_to: localhost
+
+- name: Set variables
+  set_fact:
+      snmp_password: "{{ updated_cred['json']['data']['data']['authPassword'] }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: get snmpv3 config method config from netcfg-generator
+  command: curl --user {{ git_uname }}:{{ git_token }} 'https://raw.git.ylcloud.com/NetworkInfrastructure/netcfg-generator/master/templates/snmpv3_config_push.j2' -o 'group_files/snmpv3_config_push.j2'
+  environment:
+    - HTTP_PROXY: http://{{ proxy_username }}:{{ proxy_password | urlencode }}@web.prod.proxy.XXXX.com:4200
+    - HTTPS_PROXY: http://{{ proxy_username }}:{{ proxy_password | urlencode }}@web.prod.proxy.XXXX.com:4200
+  run_once: true
+  delegate_to: localhost
+
+- name: Configure snmpv3 config method config from netcfg-generator
+  ios_config:
+    src: group_files/snmpv3_config_push.j2

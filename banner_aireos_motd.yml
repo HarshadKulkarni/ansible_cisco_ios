@@ -1,0 +1,20 @@
+- name: Setup ftp_commands to download banner.txt
+  connection: local
+  aireos_command:
+      commands:
+        - transfer download mode {{mode}}
+        - transfer download serverip {{serverip}}
+        - transfer download username {{username}}
+        - transfer download password {{password}}
+        - transfer download datatype login-banner
+        - transfer download path /{{path}}
+        - transfer download filename {{filename}}
+
+- name: Load banner
+  connection: network_cli
+  cli_command:
+      command: "transfer download start"
+      prompt:
+        - "Are you sure you want to start?"
+      answer:
+        - 'y'

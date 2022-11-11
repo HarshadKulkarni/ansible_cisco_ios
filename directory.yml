@@ -1,0 +1,7 @@
+- name: "setup backup dir"
+  file:
+    path: ./PARSER_BACKUP/{{ inventory_hostname }}
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  tags: setup_dire
